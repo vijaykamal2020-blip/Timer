@@ -1,40 +1,96 @@
-function startTimer() {
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meal Timer</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; padding:40px; }
+    button { font-size:24px; padding:15px 35px; border-radius:12px; margin:8px; }
+    #status { font-size:24px; margin-top:30px; }
+  </style>
+</head>
+<body>
+  <h1>20 Minute Meal Timer</h1>
 
-  stopTimer(false);
+  <button id="startBtn">▶ Start</button>
+  <button id="stopBtn">■ Stop</button>
+
+  <div id="status">Ready</div>
+
+<script>
+let intervalId = null;
+let minute = 0;
+const total = 20;
+
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const status = document.getElementById("status");
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+
+  setTimeout(() => {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 0.9;
+    msg.pitch = 1;
+    window.speechSynthesis.speak(msg);
+  }, 100);
+}
+
+function clearTimer() {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+}
+
+function startTimer() {
+  clearTimer();
+  window.speechSynthesis.cancel();
 
   minute = 0;
-  isRunning = true;
-
-  document.getElementById("status").innerText = "20 minutes remaining";
+  status.innerText = "20 minutes remaining";
 
   speak("Meal timer started for 20 minutes.");
 
-  interval = setInterval(function () {
-
-    if (!isRunning) return;
-
+  intervalId = setInterval(() => {
     minute++;
 
     const left = total - minute;
 
-    if (minute < total) {
-
-      const message =
-        `${minute} minute${minute > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
-
-      document.getElementById("status").innerText = message;
-      speak(message);
-
-    } else {
-
-      document.getElementById("status").innerText =
-        "20 minutes completed.";
-
+    if (minute >= total) {
+      clearTimer();
+      minute = 0;
+      status.innerText = "Completed";
       speak("20 minutes completed. Great job!");
-
-      stopTimer(false);
+      return;
     }
 
-  }, 60000);
+    const message =
+      `${minute} minute${minute > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
 
+    status.innerText = message;
+    speak(message);
+
+  }, 60000);
 }
+
+function stopTimer() {
+  clearTimer();
+  minute = 0;
+  window.speechSynthesis.cancel();
+
+  status.innerText = "Timer stopped";
+
+  setTimeout(() => {
+    const msg = new SpeechSynthesisUtterance("Timer stopped.");
+    msg.rate = 0.9;
+    window.speechSynthesis.speak(msg);
+  }, 150);
+}
+
+startBtn.addEventListener("click", startTimer);
+stopBtn.addEventListener("click", stopTimer);
+</script>
+</body>
+</html>
