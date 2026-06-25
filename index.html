@@ -2,10 +2,12 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Meal Timer</title>
+  <title>Ray's Meal Timer</title>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -16,17 +18,17 @@
       justify-content: center;
       align-items: center;
       background: linear-gradient(135deg, #ffecb3, #ffcc80, #a5d6a7, #81d4fa, #ce93d8);
-      padding: 24px;
+      padding: 18px;
       overflow: hidden;
     }
 
     body::before {
       content: "🍎 🥦 🥕 🍓 🥛 🍚";
       position: fixed;
-      top: 22px;
+      top: 18px;
       left: 0;
       width: 100%;
-      font-size: 34px;
+      font-size: 30px;
       opacity: 0.55;
       animation: floatFood 5s ease-in-out infinite;
     }
@@ -34,10 +36,10 @@
     body::after {
       content: "⭐ 🌈 ⭐ 🌈 ⭐";
       position: fixed;
-      bottom: 22px;
+      bottom: 18px;
       left: 0;
       width: 100%;
-      font-size: 32px;
+      font-size: 30px;
       opacity: 0.45;
       animation: floatFood 6s ease-in-out infinite reverse;
     }
@@ -49,10 +51,10 @@
 
     .card {
       width: 100%;
-      max-width: 450px;
+      max-width: 430px;
       background: rgba(255, 255, 255, 0.94);
       border-radius: 34px;
-      padding: 32px 22px;
+      padding: 30px 20px;
       box-shadow: 0 18px 45px rgba(0,0,0,0.22);
       border: 5px solid rgba(255,255,255,0.8);
       position: relative;
@@ -60,14 +62,15 @@
     }
 
     h1 {
-      font-size: 34px;
+      font-size: 30px;
       color: #5d4037;
       margin: 0 0 18px;
       text-shadow: 2px 2px #fff3e0;
+      white-space: nowrap;
     }
 
     #timer {
-      font-size: 78px;
+      font-size: 76px;
       margin: 18px 0;
       font-weight: 900;
       color: #1a237e;
@@ -105,18 +108,27 @@
 
     button {
       font-size: 25px;
-      padding: 16px 34px;
+      padding: 16px 32px;
       border-radius: 20px;
       border: none;
       color: white;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 10px 18px rgba(0,0,0,0.22);
+      min-width: 135px;
     }
 
-    #startBtn { background: linear-gradient(180deg, #66bb6a, #2e7d32); }
-    #stopBtn { background: linear-gradient(180deg, #ff7043, #d32f2f); }
-    button:active { transform: scale(0.96); }
+    #startBtn {
+      background: linear-gradient(180deg, #66bb6a, #2e7d32);
+    }
+
+    #stopBtn {
+      background: linear-gradient(180deg, #ff7043, #d32f2f);
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
 
     #status {
       font-size: 23px;
@@ -140,6 +152,50 @@
       border-radius: 20px;
       padding: 14px;
       font-weight: bold;
+    }
+
+    .confetti {
+      position: fixed;
+      top: -20px;
+      font-size: 28px;
+      animation: fall 3s linear forwards;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 390px) {
+      h1 {
+        font-size: 27px;
+      }
+
+      #timer {
+        font-size: 68px;
+      }
+
+      button {
+        font-size: 23px;
+        padding: 15px 28px;
+        min-width: 125px;
+      }
+
+      #status {
+        font-size: 21px;
+      }
+
+      .message {
+        font-size: 18px;
+      }
     }
   </style>
 </head>
@@ -184,6 +240,7 @@ function formatTime(seconds) {
 
 function updateDisplay() {
   timer.innerText = formatTime(remainingSeconds);
+
   const completed = totalSeconds - remainingSeconds;
   const progressPercent = (completed / totalSeconds) * 100;
   progressBar.style.width = `${progressPercent}%`;
@@ -191,12 +248,30 @@ function updateDisplay() {
 
 function speak(text) {
   window.speechSynthesis.cancel();
+
   setTimeout(() => {
     const msg = new SpeechSynthesisUtterance(text);
     msg.rate = 0.9;
     msg.pitch = 1;
     window.speechSynthesis.speak(msg);
   }, 100);
+}
+
+function launchConfetti() {
+  const emojis = ["🎉", "⭐", "🌈", "🍎", "🥦", "😊"];
+
+  for (let i = 0; i < 28; i++) {
+    const confetti = document.createElement("div");
+    confetti.className = "confetti";
+    confetti.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    confetti.style.left = Math.random() * 100 + "vw";
+    confetti.style.animationDelay = Math.random() * 0.8 + "s";
+    document.body.appendChild(confetti);
+
+    setTimeout(() => {
+      confetti.remove();
+    }, 4000);
+  }
 }
 
 function startTimer() {
@@ -217,6 +292,7 @@ function startTimer() {
 
     if (completedMinutes > lastAnnouncedMinute && completedMinutes < 20) {
       lastAnnouncedMinute = completedMinutes;
+
       const left = 20 - completedMinutes;
       let message = "";
 
@@ -224,12 +300,15 @@ function startTimer() {
         case 5:
           message = "Ray, 5 minutes completed. Great job! 15 minutes left.";
           break;
+
         case 10:
           message = "Ray, 10 minutes completed. You're halfway there! 10 minutes left.";
           break;
+
         case 15:
           message = "Ray, 15 minutes completed. Only 5 minutes left.";
           break;
+
         default:
           message = `${completedMinutes} minute${completedMinutes > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
       }
@@ -247,6 +326,7 @@ function startTimer() {
       const finalMessage = "Ray, your time is up. Mommy is coming to get you.";
       status.innerText = "🎉 Time's Up!";
       speak(finalMessage);
+      launchConfetti();
     }
   }, 1000);
 }
