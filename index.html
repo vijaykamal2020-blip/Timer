@@ -5,9 +5,7 @@
   <title>Meal Timer</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -17,36 +15,84 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #ffecb3, #ffcc80, #a5d6a7, #81d4fa);
+      background: linear-gradient(135deg, #ffecb3, #ffcc80, #a5d6a7, #81d4fa, #ce93d8);
       padding: 24px;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "🍎 🥦 🥕 🍓 🥛 🍚";
+      position: fixed;
+      top: 22px;
+      left: 0;
+      width: 100%;
+      font-size: 34px;
+      opacity: 0.55;
+      animation: floatFood 5s ease-in-out infinite;
+    }
+
+    body::after {
+      content: "⭐ 🌈 ⭐ 🌈 ⭐";
+      position: fixed;
+      bottom: 22px;
+      left: 0;
+      width: 100%;
+      font-size: 32px;
+      opacity: 0.45;
+      animation: floatFood 6s ease-in-out infinite reverse;
+    }
+
+    @keyframes floatFood {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
 
     .card {
       width: 100%;
-      max-width: 430px;
-      background: rgba(255, 255, 255, 0.92);
-      border-radius: 32px;
+      max-width: 450px;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 34px;
       padding: 32px 22px;
       box-shadow: 0 18px 45px rgba(0,0,0,0.22);
-      border: 5px solid rgba(255,255,255,0.75);
+      border: 5px solid rgba(255,255,255,0.8);
+      position: relative;
+      z-index: 1;
     }
 
     h1 {
       font-size: 34px;
       color: #5d4037;
-      margin: 0 0 20px;
+      margin: 0 0 18px;
       text-shadow: 2px 2px #fff3e0;
     }
 
     #timer {
-      font-size: 76px;
-      margin: 20px 0;
+      font-size: 78px;
+      margin: 18px 0;
       font-weight: 900;
       color: #1a237e;
-      background: #fff8e1;
-      border-radius: 28px;
+      background: linear-gradient(180deg, #fff8e1, #ffffff);
+      border-radius: 30px;
       padding: 22px 10px;
       box-shadow: inset 0 0 18px rgba(255,193,7,0.35);
+    }
+
+    .progress-wrap {
+      width: 100%;
+      height: 22px;
+      background: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 16px 0 20px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.15);
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #66bb6a, #ffee58, #ff7043);
+      border-radius: 20px;
+      transition: width 0.5s ease;
     }
 
     .buttons {
@@ -68,31 +114,27 @@
       box-shadow: 0 10px 18px rgba(0,0,0,0.22);
     }
 
-    #startBtn {
-      background: linear-gradient(180deg, #66bb6a, #2e7d32);
-    }
-
-    #stopBtn {
-      background: linear-gradient(180deg, #ff7043, #d32f2f);
-    }
-
-    button:active {
-      transform: scale(0.96);
-    }
+    #startBtn { background: linear-gradient(180deg, #66bb6a, #2e7d32); }
+    #stopBtn { background: linear-gradient(180deg, #ff7043, #d32f2f); }
+    button:active { transform: scale(0.96); }
 
     #status {
-      font-size: 24px;
+      font-size: 23px;
       margin-top: 24px;
       color: #263238;
       background: #e3f2fd;
       border-radius: 22px;
       padding: 16px;
       font-weight: bold;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .message {
-      margin-top: 20px;
-      font-size: 21px;
+      margin-top: 18px;
+      font-size: 20px;
       color: #6d4c41;
       background: #fff3e0;
       border-radius: 20px;
@@ -104,9 +146,13 @@
 
 <body>
   <div class="card">
-    <h1>🍎 20 Minute Meal Timer 🥦</h1>
+    <h1>🍎 Ray's Meal Timer 🥦</h1>
 
     <div id="timer">20:00</div>
+
+    <div class="progress-wrap">
+      <div id="progressBar"></div>
+    </div>
 
     <div class="buttons">
       <button id="startBtn">▶ Start</button>
@@ -128,6 +174,7 @@ const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const timer = document.getElementById("timer");
 const status = document.getElementById("status");
+const progressBar = document.getElementById("progressBar");
 
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
@@ -137,6 +184,9 @@ function formatTime(seconds) {
 
 function updateDisplay() {
   timer.innerText = formatTime(remainingSeconds);
+  const completed = totalSeconds - remainingSeconds;
+  const progressPercent = (completed / totalSeconds) * 100;
+  progressBar.style.width = `${progressPercent}%`;
 }
 
 function speak(text) {
@@ -144,6 +194,7 @@ function speak(text) {
   setTimeout(() => {
     const msg = new SpeechSynthesisUtterance(text);
     msg.rate = 0.9;
+    msg.pitch = 1;
     window.speechSynthesis.speak(msg);
   }, 100);
 }
@@ -156,7 +207,7 @@ function startTimer() {
   updateDisplay();
 
   status.innerText = "Timer started";
-  speak("Meal timer started for 20 minutes.");
+  speak("Ray, meal timer started for 20 minutes.");
 
   countdownId = setInterval(() => {
     remainingSeconds--;
@@ -167,7 +218,22 @@ function startTimer() {
     if (completedMinutes > lastAnnouncedMinute && completedMinutes < 20) {
       lastAnnouncedMinute = completedMinutes;
       const left = 20 - completedMinutes;
-      const message = `${completedMinutes} minute${completedMinutes > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
+      let message = "";
+
+      switch (completedMinutes) {
+        case 5:
+          message = "Ray, 5 minutes completed. Great job! 15 minutes left.";
+          break;
+        case 10:
+          message = "Ray, 10 minutes completed. You're halfway there! 10 minutes left.";
+          break;
+        case 15:
+          message = "Ray, 15 minutes completed. Only 5 minutes left.";
+          break;
+        default:
+          message = `${completedMinutes} minute${completedMinutes > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
+      }
+
       status.innerText = message;
       speak(message);
     }
@@ -177,10 +243,11 @@ function startTimer() {
       countdownId = null;
       remainingSeconds = 0;
       updateDisplay();
-      status.innerText = "Completed";
-      speak("20 minutes completed. Great job!");
-    }
 
+      const finalMessage = "Ray, your time is up. Mommy is coming to get you.";
+      status.innerText = "🎉 Time's Up!";
+      speak(finalMessage);
+    }
   }, 1000);
 }
 
