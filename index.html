@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>20 Min Voice Timer</title>
+  <title>Meal Timer</title>
   <style>
     body { font-family: Arial, sans-serif; text-align:center; padding:40px; }
     button { font-size:24px; padding:15px 35px; border-radius:12px; margin:8px; }
@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <h1>20 Minute Voice Timer</h1>
+  <h1>20 Minute Meal Timer</h1>
 
   <button onclick="startTimer()">▶ Start</button>
   <button onclick="stopTimer()">■ Stop</button>
@@ -18,45 +18,61 @@
   <div id="status">Ready</div>
 
 <script>
-let interval;
+let interval = null;
 let minute = 0;
+let isRunning = false;
 const total = 20;
 
 function speak(text){
-    speechSynthesis.cancel();
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.rate = 0.9;
-    msg.pitch = 1;
-    speechSynthesis.speak(msg);
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 0.9;
+  msg.pitch = 1;
+  window.speechSynthesis.speak(msg);
 }
 
 function startTimer(){
-    stopTimer();
-    minute = 0;
-    document.getElementById("status").innerText = "Timer Started";
-    speak("Timer started for 20 minutes.");
+  stopTimer();
+  minute = 0;
+  isRunning = true;
 
-    interval = setInterval(function(){
-        minute++;
-        const left = total - minute;
+  document.getElementById("status").innerText = "Timer Started";
+  speak("Meal timer started for 20 minutes.");
 
-        let message;
+  interval = setInterval(function(){
+    if (!isRunning) return;
 
-        if(minute < total){
-            message = `${minute} minute${minute>1?'s':''} completed. ${left} minute${left!==1?'s':''} left.`;
-        }else{
-            message = "20 minutes completed. Great job!";
-            stopTimer();
-        }
+    minute++;
+    const left = total - minute;
 
-        document.getElementById("status").innerText = message;
-        speak(message);
+    let message;
 
-    },60000);
+    if(minute < total){
+      message = `${minute} minute${minute > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
+    } else {
+      message = "20 minutes completed. Great job!";
+      stopTimer(false);
+    }
+
+    document.getElementById("status").innerText = message;
+    speak(message);
+
+  }, 60000);
 }
 
-function stopTimer(){
+function stopTimer(announce = true){
+  isRunning = false;
+
+  if (interval) {
     clearInterval(interval);
+    interval = null;
+  }
+
+  window.speechSynthesis.cancel();
+
+  if (announce) {
+    document.getElementById("status").innerText = "Stopped";
+  }
 }
 </script>
 </body>
