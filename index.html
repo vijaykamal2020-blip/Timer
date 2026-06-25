@@ -6,11 +6,14 @@
   <style>
     body { font-family: Arial, sans-serif; text-align:center; padding:40px; }
     button { font-size:24px; padding:15px 35px; border-radius:12px; margin:8px; }
-    #status { font-size:24px; margin-top:30px; }
+    #timer { font-size:64px; margin-top:30px; font-weight:bold; }
+    #status { font-size:22px; margin-top:20px; }
   </style>
 </head>
 <body>
   <h1>20 Minute Meal Timer</h1>
+
+  <div id="timer">20:00</div>
 
   <button id="startBtn">▶ Start</button>
   <button id="stopBtn">■ Stop</button>
@@ -18,79 +21,95 @@
   <div id="status">Ready</div>
 
 <script>
-let intervalId = null;
-let minute = 0;
-const total = 20;
+let countdownId = null;
+let totalSeconds = 20 * 60;
+let remainingSeconds = totalSeconds;
+let lastAnnouncedMinute = 0;
 
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
+const timer = document.getElementById("timer");
 const status = document.getElementById("status");
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function updateDisplay() {
+  timer.innerText = formatTime(remainingSeconds);
+}
 
 function speak(text) {
   window.speechSynthesis.cancel();
-
   setTimeout(() => {
     const msg = new SpeechSynthesisUtterance(text);
     msg.rate = 0.9;
-    msg.pitch = 1;
     window.speechSynthesis.speak(msg);
   }, 100);
 }
 
-function clearTimer() {
-  if (intervalId !== null) {
-    clearInterval(intervalId);
-    intervalId = null;
+function startTimer() {
+  stopTimer(false);
+
+  remainingSeconds = totalSeconds;
+  lastAnnouncedMinute = 0;
+  updateDisplay();
+
+  status.innerText = "Timer started";
+  speak("Meal timer started for 20 minutes.");
+
+  countdownId = setInterval(() => {
+    remainingSeconds--;
+    updateDisplay();
+
+    const completedMinutes = Math.floor((totalSeconds - remainingSeconds) / 60);
+
+    if (completedMinutes > lastAnnouncedMinute && completedMinutes < 20) {
+      lastAnnouncedMinute = completedMinutes;
+      const left = 20 - completedMinutes;
+      const message = `${completedMinutes} minute${completedMinutes > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
+      status.innerText = message;
+      speak(message);
+    }
+
+    if (remainingSeconds <= 0) {
+      clearInterval(countdownId);
+      countdownId = null;
+      remainingSeconds = 0;
+      updateDisplay();
+      status.innerText = "Completed";
+      speak("20 minutes completed. Great job!");
+    }
+
+  }, 1000);
+}
+
+function stopTimer(announce = true) {
+  if (countdownId !== null) {
+    clearInterval(countdownId);
+    countdownId = null;
+  }
+
+  window.speechSynthesis.cancel();
+
+  remainingSeconds = totalSeconds;
+  lastAnnouncedMinute = 0;
+  updateDisplay();
+
+  if (announce) {
+    status.innerText = "Timer stopped";
+    speak("Timer stopped.");
+  } else {
+    status.innerText = "Ready";
   }
 }
 
-function startTimer() {
-  clearTimer();
-  window.speechSynthesis.cancel();
-
-  minute = 0;
-  status.innerText = "20 minutes remaining";
-
-  speak("Meal timer started for 20 minutes.");
-
-  intervalId = setInterval(() => {
-    minute++;
-
-    const left = total - minute;
-
-    if (minute >= total) {
-      clearTimer();
-      minute = 0;
-      status.innerText = "Completed";
-      speak("20 minutes completed. Great job!");
-      return;
-    }
-
-    const message =
-      `${minute} minute${minute > 1 ? "s" : ""} completed. ${left} minute${left !== 1 ? "s" : ""} left.`;
-
-    status.innerText = message;
-    speak(message);
-
-  }, 60000);
-}
-
-function stopTimer() {
-  clearTimer();
-  minute = 0;
-  window.speechSynthesis.cancel();
-
-  status.innerText = "Timer stopped";
-
-  setTimeout(() => {
-    const msg = new SpeechSynthesisUtterance("Timer stopped.");
-    msg.rate = 0.9;
-    window.speechSynthesis.speak(msg);
-  }, 150);
-}
-
 startBtn.addEventListener("click", startTimer);
-stopBtn.addEventListener("click", stopTimer);
+stopBtn.addEventListener("click", () => stopTimer(true));
+
+updateDisplay();
 </script>
 </body>
 </html>
